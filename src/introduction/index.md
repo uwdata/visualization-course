@@ -1,6 +1,7 @@
 # Data Types, Graphical Marks, and Visual Encoding Channels
 
 ```js
+import { vl } from '../components/vega-lite.js';
 import { marks } from '../components/marks.js';
 import vega_datasets from 'npm:vega-datasets';
 ```
@@ -456,8 +457,7 @@ Plot.plot({
   x: { nice: true, zero: true },
   y: { nice: true, zero: true },
   r: { range: [0, 16] },
-  color: { type: 'categorical', scheme: 'tableau10' },
-  symbol: { legend: true },
+  color: { type: 'categorical', scheme: 'tableau10', legend: true },
   marks: [
     Plot.dotY(data2000, {
       x: 'fertility',
@@ -465,7 +465,6 @@ Plot.plot({
       r: 'pop',
       fill: 'cluster',
       fillOpacity: 0.7,
-      symbol: 'cluster',
       title: 'country',
       tip: true
     })
@@ -499,8 +498,7 @@ Plot.plot({
   x: { nice: true, zero: true },
   y: { nice: true, zero: true },
   r: { range: [0, 16] },
-  color: { type: 'categorical', scheme: 'tableau10' },
-  symbol: { legend: true },
+  color: { type: 'categorical', scheme: 'tableau10', legend: true },
   marks: [
     Plot.dotY(data2000, {
       x: 'fertility',
@@ -508,7 +506,6 @@ Plot.plot({
       r: 'pop',
       fill: 'cluster',
       fillOpacity: 0.7,
-      symbol: 'cluster',
       title: d => `Country: ${d.country}\nFertility: ${d.fertility}\nLife Expectancy: ${d.life_expect}`,
       tip: true
     })
