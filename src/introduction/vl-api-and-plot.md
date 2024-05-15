@@ -1,7 +1,7 @@
 # Data Types, Graphical Marks, and Visual Encoding Channels
 
 ```js
-import { vl, render } from '../components/vega-lite.js';
+import { vl } from '../components/vega-lite.js';
 import { marks } from '../components/marks.js';
 import vega_datasets from 'npm:vega-datasets';
 ```
@@ -123,12 +123,19 @@ For a complete list of available channels, see the [Vega-Lite encoding documenta
 The `x` encoding channel sets a mark's horizontal position (x-coordinate). In addition, default choices of axis and title are made automatically. In the chart below, the choice of a quantitative data type results in a continuous linear axis scale:
 
 ```js echo
-render({
-  mark: { type: 'point' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' }
-  }
+vl.markPoint()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility')
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  marks: [
+    Plot.dot(data2000, { x: 'fertility', stroke: 'steelblue' })
+  ]
 })
 ```
 
@@ -137,47 +144,81 @@ render({
 The `y` encoding channel sets a mark's vertical position (y-coordinate). Here we've added the `cluster` field using an ordinal (`O`) data type. The result is a discrete axis that includes a sized band, with a default step size, for each unique value:
 
 ```js echo
-render({
-  mark: { type: 'point' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'quantitative' }
-  }
-})
+vl.markPoint()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldO('cluster')
+  )
+  .render()
 ```
 
 _What happens to the chart above if you swap the `O` and `Q` field types?_
 
+```js echo
+Plot.plot({
+  y: { type: 'point' },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'cluster',
+      stroke: 'steelblue'
+    })
+  ]
+})
+```
+
+_What happens to the chart above if you remove the `'point'` scale type?_
+
 If we instead add the `life_expect` field as a quantitative (`Q`) variable, the result is a scatter plot with linear scales for both axes:
 
 ```js echo
-render({
-  mark: { type: 'point' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' }
-  }
+vl.markPoint()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect')
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { zero: true },
+  y: { zero: true },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      stroke: 'steelblue'
+    })
+  ]
 })
 ```
 
 By default, axes for linear quantitative scales include zero to ensure a proper baseline for comparing ratio-valued data. In some cases, however, a zero baseline may be meaningless or you may want to focus on interval comparisons. To disable automatic inclusion of zero, configure the encoding `scale` attribute:
 
 ```js echo
-render({
-  mark: { type: 'point' },
-  data: { values: data2000 },
-  encoding: {
-    x: {
-      field: 'fertility', type: 'quantitative',
-      scale: { zero: false }
-    },
-    y: {
-      field: 'life_expect', type: 'quantitative',
-      scale: { zero: false }
-    }
-  }
+vl.markPoint()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility').scale({zero: false}),
+    vl.y().fieldQ('life_expect').scale({zero: false})
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true },
+  y: { nice: true },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      stroke: 'steelblue'
+    })
+  ]
 })
 ```
 
@@ -192,31 +233,57 @@ The `size` encoding channel sets a mark's size or extent. The meaning of the cha
 Let's augment our scatter plot by encoding population (`pop`) on the `size` channel. As a result, the chart now also includes a legend for interpreting the size values.
 
 ```js echo
-render({
-  mark: { type: 'point' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: { field: 'pop', type: 'quantitative' }
-  }
+vl.markPoint()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop')
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true },
+  y: { nice: true },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      stroke: 'steelblue'
+    })
+  ]
 })
 ```
 
 In some cases we might be unsatisfied with the default size range. To provide a customized span of sizes, set the `range` parameter of the `scale` attribute to an array indicating the smallest and largest sizes. Here we update the size encoding to range from 0 pixels (for zero values) to 1,000 pixels (for the maximum value in the scale domain):
 
 ```js echo
-render({
-  mark: { type: 'point' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    }
-  }
+vl.markPoint()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]})
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true, zero: true },
+  y: { nice: true, zero: true },
+  r: { range: [0, 16] }, // 16 ~ sqrt(1000) / 2
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      stroke: 'steelblue'
+    })
+  ]
 })
 ```
 
@@ -227,36 +294,63 @@ The `color` encoding channel sets a mark's color. The style of color encoding is
 Here, we encode the `cluster` field using the `color` channel and a nominal (`N`) data type, resulting in a distinct hue for each cluster value. Can you start to guess what the `cluster` field might indicate?
 
 ```js echo
-render({
-  mark: { type: 'point' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' }
-  }
+vl.markPoint()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]}),
+    vl.color().fieldN('cluster')
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true, zero: true },
+  y: { nice: true, zero: true },
+  r: { range: [0, 16] },
+  color: { type: 'categorical', scheme: 'tableau10', legend: true },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      stroke: 'cluster'
+    })
+  ]
 })
 ```
 
-If you prefer filled shapes, include `filled: true` in the `mark` definition:
+If you prefer filled shapes, pass `{filled: true}` to the `markPoint` method:
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' }
-  }
+vl.markPoint({filled: true})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]}),
+    vl.color().fieldN('cluster')
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true, zero: true },
+  y: { nice: true, zero: true },
+  r: { range: [0, 16] },
+  color: { type: 'categorical', scheme: 'tableau10', legend: true },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      fill: 'cluster',
+      fillOpacity: 0.7
+    })
+  ]
 })
 ```
 
@@ -265,20 +359,16 @@ By default, Vega-Lite uses a bit of transparency to help combat over-plotting. W
 Here we demonstrate how to provide a constant value to an encoding channel instead of binding a data field:
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
-    opacity: { value: 0.5 }
-  }
-})
+vl.markPoint({filled: true})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]}),
+    vl.color().fieldN('cluster'),
+    vl.opacity().value(0.5)
+  )
+  .render()
 ```
 
 ### Shape
@@ -288,20 +378,36 @@ The `shape` encoding channel sets the geometric shape used by `point` marks. Unl
 Let's encode the `cluster` field using `shape` as well as `color`. Using multiple channels for the same underlying data field is known as a *redundant encoding*. The resulting chart combines both color and shape information into a single symbol legend:
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
-    opacity: { value: 0.5 },
-    shape: { field: 'cluster', type: 'nominal' }
-  }
+vl.markPoint({filled: true})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]}),
+    vl.color().fieldN('cluster'),
+    vl.opacity().value(0.5),
+    vl.shape().fieldN('cluster')
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true, zero: true },
+  y: { nice: true, zero: true },
+  r: { range: [0, 16] },
+  color: { type: 'categorical', scheme: 'tableau10' },
+  symbol: { legend: true },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      fill: 'cluster',
+      fillOpacity: 0.7,
+      symbol: 'cluster'
+    })
+  ]
 })
 ```
 
@@ -312,21 +418,17 @@ By this point, you might feel a bit frustrated: we've built up a chart, but we s
 The `tooltip` encoding channel determines tooltip text to show when a user moves the mouse cursor over a mark. Let's add a tooltip encoding for the `country` field, then investigate which countries are being represented.
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
-    opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' }
-  }
-})
+vl.markPoint({filled: true})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]}),
+    vl.color().fieldN('cluster'),
+    vl.opacity().value(0.5),
+    vl.tooltip().fieldN('country')
+  )
+  .render()
 ```
 
 As you mouse around you may notice that you can not select some of the points. For example, the largest dark blue circle corresponds to India, which is drawn on top of a country with a smaller population, preventing the mouse from hovering over that country. To fix this problem, we can use the `order` encoding channel.
@@ -336,21 +438,37 @@ The `order` encoding channel determines the order of data points, affecting both
 Let's order the values in descending rank order by the population (`pop`), ensuring that smaller circles are drawn later than larger circles:
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
-    opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
-    order: { field: 'pop', sort: 'descending' }
-  }
+vl.markPoint({filled: true})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]}),
+    vl.color().fieldN('cluster'),
+    vl.opacity().value(0.5),
+    vl.tooltip().fieldN('country'),
+    vl.order().fieldQ('pop').sort('descending')
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true, zero: true },
+  y: { nice: true, zero: true },
+  r: { range: [0, 16] },
+  color: { type: 'categorical', scheme: 'tableau10', legend: true },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      fill: 'cluster',
+      fillOpacity: 0.7,
+      title: 'country',
+      tip: true
+    })
+  ]
 })
 ```
 
@@ -361,25 +479,37 @@ We can also now figure out what the `cluster` field represents. Mouse over the v
 At this point we've added tooltips that show only a single property of the underlying data record. To show multiple values, we can provide the `tooltip` channel an array of encodings, one for each field we want to include:
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
-    opacity: { value: 0.5 },
-    order: { field: 'pop', sort: 'descending' },
-    tooltip: [
-      { field: 'country', type: 'nominal' },
-      { field: 'fertility', type: 'quantitative' },
-      { field: 'life_expect', type: 'quantitative' }
-    ]
-  }
+vl.markPoint({filled: true})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]}),
+    vl.color().fieldN('cluster'),
+    vl.opacity().value(0.5),
+    vl.order().fieldQ('pop').sort('descending'),
+    vl.tooltip(['country', 'fertility', 'life_expect'])
+  )
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true, zero: true },
+  y: { nice: true, zero: true },
+  r: { range: [0, 16] },
+  color: { type: 'categorical', scheme: 'tableau10', legend: true },
+  marks: [
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      fill: 'cluster',
+      fillOpacity: 0.7,
+      title: d => `Country: ${d.country}\nFertility: ${d.fertility}\nLife Expectancy: ${d.life_expect}`,
+      tip: true
+    })
+  ]
 })
 ```
 
@@ -394,47 +524,62 @@ The `column` and `row` encoding channels generate either a horizontal (columns) 
 Here is a trellis plot that divides the data into one column per `cluster` value:
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
-    opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
-    order: { field: 'pop', sort: 'descending' },
-    column: { field: 'cluster', type: 'nominal' }
-  }
-})
+vl.markPoint({filled: true})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]}),
+    vl.color().fieldN('cluster'),
+    vl.opacity().value(0.5),
+    vl.tooltip().fieldN('country'),
+    vl.order().fieldQ('pop').sort('descending'),
+    vl.column().fieldN('cluster')
+  )
+  .render()
 ```
 
 The plot above does not fit on screen, making it difficult to compare the sub-plots to each other! We can set the `width` and `height` properties to create a smaller set of multiples. Also, as the column headers already label the `cluster` values, let's remove our `color` legend by setting it to `null`. To make better use of space we can also orient our `size` legend to the `'bottom'` of the chart.
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] },
-      legend: { orient: 'bottom', titleOrient: 'left' }
-    },
-    color: { field: 'cluster', type: 'nominal', legend: null },
-    opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
-    order: { field: 'pop', sort: 'descending' },
-    column: { field: 'cluster', type: 'nominal' }
-  },
-  width: 130,
-  height: 130
+vl.markPoint({filled: true})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldQ('life_expect'),
+    vl.size().fieldQ('pop').scale({range: [0, 1000]})
+      .legend({orient: 'bottom', titleOrient: 'left'}),
+    vl.color().fieldN('cluster')
+      .legend(null),
+    vl.opacity().value(0.5),
+    vl.tooltip().fieldN('country'),
+    vl.order().fieldQ('pop').sort('descending'),
+    vl.column().fieldN('cluster')
+  )
+  .width(130)
+  .height(130)
+  .render()
+```
+
+```js echo
+Plot.plot({
+  x: { nice: true, zero: true, ticks: 5, grid: true },
+  y: { nice: true, zero: true, ticks: 5, grid: true },
+  r: { range: [0, 16] },
+  color: { type: 'categorical', scheme: 'tableau10', legend: true },
+  width: 800,
+  height: 160,
+  marks: [
+    Plot.frame(),
+    Plot.dotY(data2000, {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      fill: 'cluster',
+      fillOpacity: 0.7,
+      fx: 'cluster'
+    })
+  ]
 })
 ```
 
@@ -449,67 +594,47 @@ In later modules, we'll dive into interaction techniques for data exploration. H
 _Drag the slider back and forth to see how the data values change over time!_
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data },
-  params: [
-    {
-      name: 'year',
-      select: { type: 'point', fields: ['year'] },
-      value: { year: 1955 },
-      bind: { input: 'range', min: 1955, max: 2005, step: 5 }
-    }
-  ],
-  transform: [
-    { filter: { param: 'year' } }
-  ],
-  encoding: {
-    x: {
-      field: 'fertility', type: 'quantitative',
-      scale: { domain: [0, 9] }
-    },
-    y: {
-      field: 'life_expect', type: 'quantitative',
-      scale: { domain: [0, 90] }
-    },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { domain: [0, 1.2e9], range: [0, 1_000] }
-    },
-    color: { field: 'cluster', type: 'nominal', legend: null },
-    opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
-    order: { field: 'pop', sort: 'descending' },
-  }
-})
+(function() {
+  const selectYear = vl.selectPoint('select').fields('year')
+    .init({year: 1955})
+    .bind(vl.slider().min(1955).max(2005).step(5));
+
+  return vl.markPoint({filled: true})
+    .data({values: data})
+    .params(selectYear)
+    .transform(vl.filter(selectYear))
+    .encode(
+      vl.x().fieldQ('fertility').scale({domain: [0, 9]}),
+      vl.y().fieldQ('life_expect').scale({domain: [0, 90]}),
+      vl.size().fieldQ('pop').scale({domain: [0, 1200000000], range: [0, 1000]}),
+      vl.color().fieldN('cluster').legend(null),
+      vl.opacity().value(0.5),
+      vl.tooltip().fieldN('country'),
+      vl.order().fieldQ('pop').sort('descending')
+    )
+    .render();
+})()
 ```
 
 ```js
-const year = view(Inputs.range([1955, 2005], { value: 1955, step: 5 }));
+const year = view(Inputs.range([1955, 2005], { step: 5 }));
 ```
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data.filter(d => d.year === year) },
-  encoding: {
-    x: {
-      field: 'fertility', type: 'quantitative',
-      scale: { domain: [0, 9] }
-    },
-    y: {
-      field: 'life_expect', type: 'quantitative',
-      scale: { domain: [0, 90] }
-    },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { domain: [0, 1.2e9], range: [0, 1_000] }
-    },
-    color: { field: 'cluster', type: 'nominal', legend: null },
-    opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
-    order: { field: 'pop', sort: 'descending' },
-  }
+Plot.plot({
+  x: { domain: [0, 9], grid: true },
+  y: { domain: [0, 90], grid: true },
+  r: { range: [0, 16] },
+  color: { type: 'categorical', scheme: 'tableau10', legend: true },
+  marks: [
+    Plot.dotY(data.filter(d => d.year === year), {
+      x: 'fertility',
+      y: 'life_expect',
+      r: 'pop',
+      fill: 'cluster',
+      fillOpacity: 0.7
+    })
+  ]
 })
 ```
 
@@ -537,15 +662,14 @@ The `point` mark type conveys specific points, as in *scatter plots* and *dot pl
 Below is a dot plot of `fertility`, with the `cluster` field redundantly encoded using both the `y` and `shape` channels.
 
 ```js echo
-render({
-  mark: { type: 'point' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' },
-    shape: { field: 'cluster', type: 'nominal' }
-  }
-})
+vl.markPoint()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldN('cluster'),
+    vl.shape().fieldN('cluster')
+  )
+  .render()
 ```
 
 In addition to encoding channels, marks can be stylized by providing values to the `mark*()` methods.
@@ -553,15 +677,14 @@ In addition to encoding channels, marks can be stylized by providing values to t
 For example: point marks are drawn with stroked outlines by default, but can be specified to use `filled` shapes instead. Similarly, you can set a default `size` to set the total pixel area of the point mark.
 
 ```js echo
-render({
-  mark: { type: 'point', filled: true, size: 100 },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' },
-    shape: { field: 'cluster', type: 'nominal' }
-  }
-})
+vl.markPoint({filled: true, size: 100})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldN('cluster'),
+    vl.shape().fieldN('cluster')
+  )
+  .render()
 ```
 
 ### Circle Marks
@@ -569,14 +692,13 @@ render({
 The `circle` mark type is a shorthand for `point` marks drawn as filled circles.
 
 ```js echo
-render({
-  mark: { type: 'circle', size: 100 },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' }
-  }
-})
+vl.markCircle({size: 100})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldN('cluster')
+  )
+  .render()
 ```
 
 ### Square Marks
@@ -584,14 +706,13 @@ render({
 The `square` mark type is a shorthand for `point` marks drawn as filled squares.
 
 ```js echo
-render({
-  mark: { type: 'square', size: 100 },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' }
-  }
-})
+vl.markSquare({size: 100})
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldN('cluster')
+  )
+  .render()
 ```
 
 ### Tick Marks
@@ -599,14 +720,13 @@ render({
 The `tick` mark type conveys a data point using a short line segment or "tick". These are particularly useful for comparing values along a single dimension with minimal overlap. A *dot plot* drawn with tick marks is sometimes referred to as a *strip plot*.
 
 ```js echo
-render({
-  mark: { type: 'tick' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' }
-  }
-})
+vl.markTick()
+  .data(data2000)
+  .encode(
+    vl.x().fieldQ('fertility'),
+    vl.y().fieldN('cluster')
+  )
+  .render()
 ```
 
 ### Bar Marks
@@ -616,56 +736,48 @@ The `bar` mark type draws a rectangle with a position, width, and height.
 The plot below is a simple bar chart of the population (`pop`) of each country.
 
 ```js echo
-render({
-  mark: { type: 'bar' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'country', type: 'nominal' },
-    y: { field: 'pop', type: 'quantitative' }
-  }
-})
+vl.markBar()
+  .data(data2000)
+  .encode(
+    vl.x().fieldN('country'),
+    vl.y().fieldQ('pop')
+  )
+  .render()
 ```
 
 The bar width is set to a default size. _To change the width, try setting the `step` property of the `markBar` object's `width` attribute, like so:_
 
-```js run=false
-{
-  mark: { type: 'bar' }
-  width: { step: 12 }
-}
-```
+`vl.markBar().width({step: 12})`.
 
 Bars can also be stacked. Let's change the `x` encoding to use the `cluster` field, and encode `country` using the `color` channel. We'll also disable the legend (which would be very long with colors for all countries!) and use tooltips for the country name.
 
 ```js echo
-render({
-  mark: { type: 'bar' },
-  data: { values: data2000 },
-  encoding: {
-    x: { field: 'country', type: 'nominal' },
-    y: { field: 'pop', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal', legend: null },
-    tooltip: { field: 'country', type: 'nominal' }
-  }
-})
+vl.markBar()
+  .data(data2000)
+  .encode(
+    vl.x().fieldN('cluster'),
+    vl.y().fieldQ('pop'),
+    vl.color().fieldN('country').legend(null),
+    vl.tooltip().fieldN('country')
+  )
+  .render()
 ```
 
 The examples above create bar charts from a zero baseline, and the `y` channel only encodes the non-zero value (or height) of the bar. However, the bar mark also allows you to specify starting and ending points to convey ranges.
 
-The chart below uses the `x` (starting point) and `x2` (ending point) channels to show the range of life expectancies within each regional cluster. Below we use the `min` and `max` aggregation functions to determine the end points of the range. We will discuss aggregation in greater detail in a later lesson!
+The chart below uses the `x` (starting point) and `x2` (ending point) channels to show the range of life expectancies within each regional cluster. Below we use the `min` and `max` aggregation functions to determine the end points of the range. We will discuss aggregation in greater detail in the next notebook!
 
 Alternatively, you can use `x` and `width` to provide a starting point plus offset, such that `x2 = x + width`.
 
 ```js echo
-render({
-  mark: { type: 'bar' },
-  data: { values: data2000 },
-  encoding: {
-    x: { aggregate: 'min', field: 'life_expect' },
-    x2: { aggregate: 'max', field: 'life_expect' },
-    y: { field: 'cluster', type: 'nominal' }
-  }
-})
+vl.markBar()
+  .data(data2000)
+  .encode(
+    vl.x().min('life_expect'),
+    vl.x2().max('life_expect'),
+    vl.y().fieldN('cluster')
+  )
+  .render()
 ```
 
 ### Line Marks
@@ -675,17 +787,16 @@ The `line` mark type connects plotted points with line segments, for example so 
 Let's plot a line chart of fertility per country over the years, using the full, unfiltered global development data frame. We'll again hide the legend and use tooltips instead.
 
 ```js echo
-render({
-  mark: { type: 'line' },
-  data: { values: data },
-  encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'fertility', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal', legend: null },
-    tooltip: { field: 'country', type: 'nominal' }
-  },
-  width: 400
-})
+vl.markLine()
+  .data(data)
+  .encode(
+    vl.x().fieldO('year'),
+    vl.y().fieldQ('fertility'),
+    vl.color().fieldN('country').legend(null),
+    vl.tooltip().fieldN('country')
+  )
+  .width(400)
+  .render()
 ```
 
 We can see interesting variations per country, but overall trends for lower numbers of children per family over time. Also note that we set a custom width of 400 pixels. _Try changing (or removing) the widths and see what happens!_
@@ -693,20 +804,16 @@ We can see interesting variations per country, but overall trends for lower numb
 Let's change some of the default mark parameters to customize the plot. We can set the `strokeWidth` to determine the thickness of the lines and the `opacity` to add some transparency. By default, the `line` mark uses straight line segments to connect data points. In some cases we might want to smooth the lines. We can adjust the interpolation used to connect data points by setting the `interpolate` mark parameter. Let's use `'monotone'` interpolation to provide smooth lines that are also guaranteed not to inadvertently generate "false" minimum or maximum values as a result of the interpolation.
 
 ```js echo
-render({
-  mark: {
-    type: 'line',
-    strokeWidth: 3, opacity: 0.5, interpolate: 'monotone'
-  },
-  data: { values: data },
-  encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'fertility', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal', legend: null },
-    tooltip: { field: 'country', type: 'nominal' }
-  },
-  width: 400
-})
+vl.markLine({strokeWidth: 3, opacity: 0.5, interpolate: 'monotone'})
+  .data(data)
+  .encode(
+    vl.x().fieldO('year'),
+    vl.y().fieldQ('fertility'),
+    vl.color().fieldN('country').legend(null),
+    vl.tooltip().fieldN('country')
+  )
+  .width(400)
+  .render()
 ```
 
 The `line` mark can also be used to create *slope graphs*, charts that highlight the change in value between two comparison points using line slopes.
@@ -718,20 +825,16 @@ By default, Vega-Lite places the years close together. To space out the years al
 _Try adjusting `padding` and `step` below and see how the chart changes in response._
 
 ```js echo
-render({
-  mark: { type: 'line', opacity: 0.5 },
-  data: { values: data.filter(d => d.year === 1955 || d.year === 2005) },
-  encoding: {
-    x: {
-      field: 'year', type: 'ordinal',
-      scale: { padding: 0.1 }
-    },
-    y: { field: 'pop', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal', legend: null },
-    tooltip: { field: 'country', type: 'nominal' }
-  },
-  width: { step: 100 }
-})
+vl.markLine({opacity: 0.5})
+  .data(data.filter(d => d.year === 1955 || d.year === 2005))
+  .encode(
+    vl.x().fieldO('year').scale({ padding: 0.1 }),
+    vl.y().fieldQ('pop'),
+    vl.color().fieldN('country').legend(null),
+    vl.tooltip().fieldN('country')
+  )
+  .width({step: 100})
+  .render()
 ```
 
 ### Area Marks
@@ -745,27 +848,25 @@ const dataUS = data.filter(d => d.country === 'United States')
 ```
 
 ```js echo
-render({
-  mark: { type: 'area' },
-  data: { values: dataUS },
-  encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'fertility', type: 'quantitative' }
-  }
-})
+vl.markArea()
+  .data(dataUS)
+  .encode(
+    vl.x().fieldO('year'),
+    vl.y().fieldQ('fertility')
+  )
+  .render()
 ```
 
 Similar to `line` marks, `area` marks support an `interpolate` parameter.
 
 ```js echo
-render({
-  mark: { type: 'area', interpolate: 'monotone' },
-  data: { values: dataUS },
-  encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'fertility', type: 'quantitative' }
-  }
-})
+vl.markArea({interpolate: 'monotone'})
+  .data(dataUS)
+  .encode(
+    vl.x().fieldO('year'),
+    vl.y().fieldQ('fertility')
+  )
+  .render()
 ```
 
 Similar to `bar` marks, `area` marks also support stacking. Here we create a new data frame with data for the three North American countries, then plot them using an `area` mark and a `color` encoding channel to stack by country.
@@ -779,15 +880,14 @@ const dataNA = data.filter(d => {
 ```
 
 ```js echo
-render({
-  mark: { type: 'area' },
-  data: { values: dataNA },
-  encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'pop', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal' }
-  }
-})
+vl.markArea()
+  .data(dataNA)
+  .encode(
+    vl.x().fieldO('year'),
+    vl.y().fieldQ('pop'),
+    vl.color().fieldN('country')
+  )
+  .render()
 ```
 
 By default, stacking is performed relative to a zero baseline. However, other `stack` options are available:
@@ -798,29 +898,27 @@ By default, stacking is performed relative to a zero baseline. However, other `s
 Below we adapt the chart by setting the `y` encoding `stack` property to `center`. _What happens if you instead set it `normalize`?_
 
 ```js echo
-render({
-  mark: { type: 'area' },
-  data: { values: dataNA },
-  encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'pop', type: 'quantitative', stack: 'center' },
-    color: { field: 'country', type: 'nominal' }
-  }
-})
+vl.markArea()
+  .data(dataNA)
+  .encode(
+    vl.x().fieldO('year'),
+    vl.y().fieldQ('pop').stack('center'),
+    vl.color().fieldN('country')
+  )
+  .render()
 ```
 
 To disable stacking altogether, set the `stack` property to `null`. We can also add `opacity` as a default mark property to ensure we see the overlapping areas!
 
 ```js echo
-render({
-  mark: { type: 'area', opacity: 0.5 },
-  data: { values: dataNA },
-  encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'pop', type: 'quantitative', stack: null },
-    color: { field: 'country', type: 'nominal' }
-  }
-})
+vl.markArea({opacity: 0.5})
+  .data(dataNA)
+  .encode(
+    vl.x().fieldO('year'),
+    vl.y().fieldQ('pop').stack(null),
+    vl.color().fieldN('country')
+  )
+  .render()
 ```
 
 The `area` mark type also supports data-driven baselines, with both the upper and lower series determined by data fields. As with `bar` marks, we can use the `x` and `x2` (or `y` and `y2`) channels to provide end points for the area mark.
@@ -828,16 +926,15 @@ The `area` mark type also supports data-driven baselines, with both the upper an
 The chart below visualizes the range of minimum and maximum fertility, per year, for North American countries:
 
 ```js echo
-render({
-  mark: { type: 'area' },
-  data: { values: dataNA },
-  encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { aggregate: 'min', field: 'fertility' },
-    y2: { aggregate: 'max', field: 'fertility' }
-  },
-  width: { step: 40 }
-})
+vl.markArea()
+  .data(dataNA)
+  .encode(
+    vl.x().fieldO('year'),
+    vl.y().min('fertility'),
+    vl.y2().max('fertility')
+  )
+  .width({step: 40})
+  .render();
 ```
 
 We can see a larger range of values in 1995, from just under 4 to just under 7. By 2005, both the overall fertility values and the variability have declined, centered around 2 children per familty.
@@ -845,16 +942,15 @@ We can see a larger range of values in 1995, from just under 4 to just under 7. 
 All the `area` mark examples above use a vertically oriented area. However, Vega-Lite supports horizontal areas as well. Let's transpose the chart above, simply by swapping the `x` and `y` channels.
 
 ```js echo
-render({
-  mark: { type: 'area' },
-  data: { values: dataNA },
-  encoding: {
-    y: { field: 'year', type: 'ordinal' },
-    x: { aggregate: 'min', field: 'fertility' },
-    x2: { aggregate: 'max', field: 'fertility' }
-  },
-  height: { step: 40 }
-})
+vl.markArea()
+  .data(dataNA)
+  .encode(
+    vl.y().fieldO('year'),
+    vl.x().min('fertility'),
+    vl.x2().max('fertility')
+  )
+  .height({step: 40})
+  .render()
 ```
 
 ## Summary

@@ -18,3 +18,7 @@ export const vl = api.register(vega, vegalite, {
     if (view.container()) view.container().style['overflow-x'] = 'auto';
   }
 });
+
+export function render(spec) {
+  return vl.spec(spec).render();
+}
