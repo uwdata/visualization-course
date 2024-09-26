@@ -1,25 +1,30 @@
 // See https://observablehq.com/framework/config for documentation.
 export default {
   // The project’s title; used in the sidebar and webpage titles.
-  title: "Data Visualization Course",
+  title: 'Data Visualization Course',
 
   // The pages and sections in the sidebar. If you don’t specify this option,
   // all pages will be listed in alphabetical order. Listing pages explicitly
   // lets you organize them into sections and have unlisted pages.
   pages: [
     {
-      name: "Topics",
+      name: "Vega-Lite",
       pages: [
-        {name: "Introduction", path: "/introduction/"},
-        {name: "Visual Encoding", path: "visual-encoding/"},
-        {name: "Visual Analysis", path: "visual-analysis/"},
-        {name: "Interaction", path: "interaction/"},
-        {name: "Perception", path: "perception/"},
-        {name: "Maps", path: "maps/"},
-        {name: "Web Visualization", path: "web-visualization/"},
-        {name: "Networks", path: "networks/"},
-        {name: "Communication", path: "comunication/"},
-        {name: "Evaluation", path: "evaluation/"}
+        {name: "Introduction to Vega-Lite", path: "vega-lite/introduction"},
+        {name: "Data Types, Graphical Marks, and Visual Encoding Channels", path: "vega-lite/data-types-graphical-marks-encoding-channels"},
+        {name: "Data Transformation", path: "vega-lite/data-transformation"},
+        {name: "Scales, Axes, and Legends", path: "vega-lite/scales-axes-legends"},
+        {name: "Multi-View Composition", path: "vega-lite/multi-view-composition"},
+        {name: "Interaction", path: "vega-lite/interaction"},
+        {name: "Cartographic Visualization", path: "vega-lite/cartographic-visualization"}
+      ]
+    },
+    {
+      name: 'Vega-Lite Examples',
+      pages: [
+        {name: 'U.S. Population 1850-2000', path: 'vega-lite/examples/us-population-1850-2000'},
+        {name: 'Annotated Time Series', path: 'vega-lite/examples/annotated-time-series'},
+        {name: 'Airport Connections', path: 'vega-lite/examples/airport-connections'}
       ]
     }
   ],

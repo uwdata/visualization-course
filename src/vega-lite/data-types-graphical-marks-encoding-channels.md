@@ -1,18 +1,48 @@
-# Data Types, Graphical Marks, and Visual Encoding Channels
-
 ```js
-import { vl, render } from '../components/vega-lite.js';
-import { marks } from '../components/marks.js';
+import { render } from '../components/vega-lite.js';
 import vega_datasets from 'npm:vega-datasets';
 ```
+
+# Data Types, Graphical Marks, and Visual Encoding Channels
 
 A visualization represents data using a collection of _graphical marks_ such as bars, lines, and point symbols. The attributes of a mark &mdash; such as its position, shape, size, or color &mdash; serve as _channels_ in which we can encode underlying data values.
 
 ```js
-marks()
+{
+  const data = aq.table({
+    u: 'ABCDEFGH'.split(''),
+    v: [2, 8, 3, 7, 5, 4, 6, 1]
+  }).objects();
+
+  const chart = (markType, encoding = {}) => ({
+    mark: markType,
+    data: { values: data },
+    encoding: {
+      x: { field: 'u', type: 'nominal', axis: null },
+      y: { field: 'v', type: 'quantitative', axis: null },
+      ...encoding
+    },
+    width: 110,
+    height: 80
+  });
+
+  display(await render({
+    hconcat: [
+      chart({ type: 'bar' }),
+      chart({ type: 'line', point: true, interpolate: 'monotone' }),
+      chart({ type: 'tick' }),
+      chart({ type: 'text', fill: 'steelblue', baseline: 'middle' }, { text: { field: 'u', type: 'nominal' } }),
+      chart({ type: 'area' }),
+    ],
+    spacing: 15,
+    config: { view: { stroke: null } }
+  }));
+}
 ```
 
-With a basic framework of _data types_, _marks_, and _encoding channels_, we can concisely create a wide variety of visualizations. In this lesson, we explore each of these elements and show how to use them to create custom statistical graphics.
+With a basic framework of _data types_, _marks_, and _encoding channels_, we can concisely create a wide variety of visualizations. In this notebook, we explore each of these elements and show how to use them to create custom statistical graphics.
+
+<hr/>
 
 ## Global Development Data
 
@@ -24,14 +54,13 @@ Let's first load the dataset from the [vega-datasets](https://github.com/vega/ve
 const data = vega_datasets['gapminder.json']()
 ```
 
-How large is the dataset?
-
+How big is the data?
 ${data.length} rows, ${Object.keys(data[0]).length} columns!
 
-Let's take a peek at the table content:
+Let's take a peek at the content:
 
 ```js echo
-Inputs.table(data, { maxWidth: 600 })
+Inputs.table(data)
 ```
 
 For each `country` and `year` (in 5-year intervals), we have measures of fertility in terms of the number of children per woman (`fertility`), life expectancy in years (`life_expect`), and total population (`pop`).
@@ -45,8 +74,10 @@ const data2000 = data.filter(d => d.year === 2000)
 ```
 
 ```js echo
-Inputs.table(data2000, { maxWidth: 600 })
+Inputs.table(data2000)
 ```
+
+<hr/>
 
 ## Data Types
 
@@ -101,6 +132,8 @@ Moreover, these data types do _not_ provide a fixed categorization. For example,
 
 Now let's examine how to visualize these data types using _encoding channels_.
 
+<hr/>
+
 ## Encoding Channels
 
 At the heart of Vega-Lite is the use of *encodings* that bind data fields (with a given data type) to available encoding *channels* of a chosen *mark* type. In this notebook we'll examine the following encoding channels:
@@ -124,10 +157,10 @@ The `x` encoding channel sets a mark's horizontal position (x-coordinate). In ad
 
 ```js echo
 render({
-  mark: { type: 'point' },
+  mark: 'point',
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' }
+    x: { field: 'fertility', type: 'Q' } // we can use 'Q' or 'quantitative'
   }
 })
 ```
@@ -138,11 +171,11 @@ The `y` encoding channel sets a mark's vertical position (y-coordinate). Here we
 
 ```js echo
 render({
-  mark: { type: 'point' },
+  mark: 'point',
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'quantitative' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'cluster', type: 'O' } // we can use 'O' or 'ordinal'
   }
 })
 ```
@@ -153,11 +186,11 @@ If we instead add the `life_expect` field as a quantitative (`Q`) variable, the 
 
 ```js echo
 render({
-  mark: { type: 'point' },
+  mark: 'point',
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' }
   }
 })
 ```
@@ -166,24 +199,18 @@ By default, axes for linear quantitative scales include zero to ensure a proper 
 
 ```js echo
 render({
-  mark: { type: 'point' },
+  mark: 'point',
   data: { values: data2000 },
   encoding: {
-    x: {
-      field: 'fertility', type: 'quantitative',
-      scale: { zero: false }
-    },
-    y: {
-      field: 'life_expect', type: 'quantitative',
-      scale: { zero: false }
-    }
+    x: { field: 'fertility', type: 'Q', scale: { zero: false } },
+    y: { field: 'life_expect', type: 'Q', scale: { zero: false } }
   }
 })
 ```
 
 Now the axis scales no longer include zero by default. Some padding still remains, as the axis domain end points are automatically snapped to _nice_ numbers like multiples of 5 or 10.
 
-_What happens if you also add `nice: false` to the scale properties above?_
+_What happens if you also add `nice:false` to the scale properties above?_
 
 ### Size
 
@@ -193,12 +220,12 @@ Let's augment our scatter plot by encoding population (`pop`) on the `size` chan
 
 ```js echo
 render({
-  mark: { type: 'point' },
+  mark: 'point',
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: { field: 'pop', type: 'quantitative' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q' }
   }
 })
 ```
@@ -207,15 +234,12 @@ In some cases we might be unsatisfied with the default size range. To provide a 
 
 ```js echo
 render({
-  mark: { type: 'point' },
+  mark: 'point',
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } }
   }
 })
 ```
@@ -228,39 +252,33 @@ Here, we encode the `cluster` field using the `color` channel and a nominal (`N`
 
 ```js echo
 render({
-  mark: { type: 'point' },
+  mark: 'point',
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } },
+    color: { field: 'cluster', type: 'N' } // we can use 'N' or 'nominal'
   }
 })
 ```
 
-If you prefer filled shapes, include `filled: true` in the `mark` definition:
+If you prefer filled shapes, include `filled: true` in the `mark` specification:
 
 ```js echo
 render({
   mark: { type: 'point', filled: true },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } },
+    color: { field: 'cluster', type: 'N' }
   }
 })
 ```
 
-By default, Vega-Lite uses a bit of transparency to help combat over-plotting. We are free to further adjust the opacity, either by passing a default value to the `mark*` method, or using a dedicated encoding channel.
+By default, Vega-Lite uses a bit of transparency to help combat over-plotting. We are free to further adjust the opacity, either by passing a default value to the `mark` specification, or using a dedicated encoding channel.
 
 Here we demonstrate how to provide a constant value to an encoding channel instead of binding a data field:
 
@@ -269,13 +287,10 @@ render({
   mark: { type: 'point', filled: true },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } },
+    color: { field: 'cluster', type: 'N' },
     opacity: { value: 0.5 }
   }
 })
@@ -292,15 +307,12 @@ render({
   mark: { type: 'point', filled: true },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } },
+    color: { field: 'cluster', type: 'N' },
     opacity: { value: 0.5 },
-    shape: { field: 'cluster', type: 'nominal' }
+    shape: { field: 'cluster', type: 'N' }
   }
 })
 ```
@@ -316,15 +328,12 @@ render({
   mark: { type: 'point', filled: true },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } },
+    color: { field: 'cluster', type: 'N' },
     opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' }
+    tooltip: { field: 'country', type: 'N' }
   }
 })
 ```
@@ -340,15 +349,12 @@ render({
   mark: { type: 'point', filled: true },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } },
+    color: { field: 'cluster', type: 'N' },
     opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
+    tooltip: { field: 'country', type: 'N' },
     order: { field: 'pop', sort: 'descending' }
   }
 })
@@ -365,25 +371,22 @@ render({
   mark: { type: 'point', filled: true },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } },
+    color: { field: 'cluster', type: 'N' },
     opacity: { value: 0.5 },
     order: { field: 'pop', sort: 'descending' },
     tooltip: [
-      { field: 'country', type: 'nominal' },
-      { field: 'fertility', type: 'quantitative' },
-      { field: 'life_expect', type: 'quantitative' }
+      { field: 'country', type: 'N' },
+      { field: 'fertility', type: 'Q' },
+      { field: 'life_expect', type: 'Q' }
     ]
   }
 })
 ```
 
-Now we can see multiple data fields upon mouse over! We used an array of string values to indicate the fields, which serves as a convenient alternative to writing `vl.tooltip().fieldN('name')` for all three field entries.
+Now we can see multiple data fields upon mouse over!
 
 ### Column and Row Facets
 
@@ -398,17 +401,14 @@ render({
   mark: { type: 'point', filled: true },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] }
-    },
-    color: { field: 'cluster', type: 'nominal' },
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
+    size: { field: 'pop', type: 'Q', scale: { range: [0, 1000] } },
+    color: { field: 'cluster', type: 'N' },
     opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
     order: { field: 'pop', sort: 'descending' },
-    column: { field: 'cluster', type: 'nominal' }
+    tooltip: { field: 'country', type: 'N' },
+    column: { field: 'cluster', type: 'N' }
   }
 })
 ```
@@ -420,18 +420,17 @@ render({
   mark: { type: 'point', filled: true },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'life_expect', type: 'quantitative' },
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'life_expect', type: 'Q' },
     size: {
-      field: 'pop', type: 'quantitative',
-      scale: { range: [0, 1000] },
+      field: 'pop', type: 'Q', scale: { range: [0, 1000] },
       legend: { orient: 'bottom', titleOrient: 'left' }
     },
-    color: { field: 'cluster', type: 'nominal', legend: null },
+    color: { field: 'cluster', type: 'N', legend: null },
     opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
     order: { field: 'pop', sort: 'descending' },
-    column: { field: 'cluster', type: 'nominal' }
+    tooltip: { field: 'country', type: 'N' },
+    column: { field: 'cluster', type: 'N' }
   },
   width: 130,
   height: 130
@@ -448,85 +447,76 @@ In later modules, we'll dive into interaction techniques for data exploration. H
 
 _Drag the slider back and forth to see how the data values change over time!_
 
-```js echo
+```js
+const selectYear = {
+  name: 'year',
+  select: { type: 'point', fields: ['year'] },
+  value: { year: 1955 },
+  bind: { input: 'range', min: 1955, max: 2005, step: 5, name: 'Year' }
+};
+
+display(await render({
+  mark: { type: 'point', filled: true },
+  data: { values: data },
+  params: [ selectYear ],
+  transform: [{ filter: { param: 'year' } }],
+  encoding: {
+    x: { field: 'fertility', type: 'Q', scale: { domain: [0, 9] } },
+    y: { field: 'life_expect', type: 'Q', scale: { domain: [0, 90] } },
+    size: {
+      field: 'pop', type: 'Q', scale: { domain: [0, 1200000000], range: [0, 1000] }
+    },
+    color: { field: 'cluster', type: 'N', legend: null },
+    opacity: { value: 0.5 },
+    order: { field: 'pop', sort: 'descending' },
+    tooltip: { field: 'country', type: 'N' }
+  }
+}))
+```
+
+```js run=false
+const selectYear = {
+  name: 'year',
+  select: { type: 'point', fields: ['year'] },
+  value: { year: 1955 },
+  bind: { input: 'range', min: 1955, max: 2005, step: 5, name: 'Year' }
+};
+
 render({
   mark: { type: 'point', filled: true },
   data: { values: data },
-  params: [
-    {
-      name: 'year',
-      select: { type: 'point', fields: ['year'] },
-      value: { year: 1955 },
-      bind: { input: 'range', min: 1955, max: 2005, step: 5 }
-    }
-  ],
-  transform: [
-    { filter: { param: 'year' } }
-  ],
+  params: [ selectYear ],
+  transform: [{ filter: { param: 'year' } }],
   encoding: {
-    x: {
-      field: 'fertility', type: 'quantitative',
-      scale: { domain: [0, 9] }
-    },
-    y: {
-      field: 'life_expect', type: 'quantitative',
-      scale: { domain: [0, 90] }
-    },
+    x: { field: 'fertility', type: 'Q', scale: { domain: [0, 9] } },
+    y: { field: 'life_expect', type: 'Q', scale: { domain: [0, 90] } },
     size: {
-      field: 'pop', type: 'quantitative',
-      scale: { domain: [0, 1.2e9], range: [0, 1_000] }
+      field: 'pop', type: 'Q', scale: { domain: [0, 1200000000], range: [0, 1000] }
     },
-    color: { field: 'cluster', type: 'nominal', legend: null },
+    color: { field: 'cluster', type: 'N', legend: null },
     opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
     order: { field: 'pop', sort: 'descending' },
+    tooltip: { field: 'country', type: 'N' }
   }
 })
 ```
 
-```js
-const year = view(Inputs.range([1955, 2005], { value: 1955, step: 5 }));
-```
-
-```js echo
-render({
-  mark: { type: 'point', filled: true },
-  data: { values: data.filter(d => d.year === year) },
-  encoding: {
-    x: {
-      field: 'fertility', type: 'quantitative',
-      scale: { domain: [0, 9] }
-    },
-    y: {
-      field: 'life_expect', type: 'quantitative',
-      scale: { domain: [0, 90] }
-    },
-    size: {
-      field: 'pop', type: 'quantitative',
-      scale: { domain: [0, 1.2e9], range: [0, 1_000] }
-    },
-    color: { field: 'cluster', type: 'nominal', legend: null },
-    opacity: { value: 0.5 },
-    tooltip: { field: 'country', type: 'nominal' },
-    order: { field: 'pop', sort: 'descending' },
-  }
-})
-```
+<hr/>
 
 ## Graphical Marks
 
 Our exploration of encoding channels above exclusively uses `point` marks to visualize the data. However, the `point` mark type is only one of the many geometric shapes that can be used to visually represent data. Vega-Lite includes a number of built-in mark types, including:
 
-- `markArea()` - Filled areas defined by a top-line and a baseline.
-- `markBar()` -	Rectangular bars.
-- `markCircle()`	- Scatter plot points as filled circles.
-- `markLine()` - Connected line segments.
-- `markPoint()` - Scatter plot points with configurable shapes.
-- `markRect()` - Filled rectangles, useful for heatmaps.
-- `markRule()` - Vertical or horizontal lines spanning the axis.
-- `markSquare()` - Scatter plot points as filled squares.
-- `markText()` - Scatter plot points represented by text.
-- `markTick()` - Vertical or horizontal tick marks.
+- `area` - Filled areas defined by a top-line and a baseline.
+- `bar` -	Rectangular bars.
+- `circle`	- Scatter plot points as filled circles.
+- `line` - Connected line segments.
+- `point` - Scatter plot points with configurable shapes.
+- `rect` - Filled rectangles, useful for heatmaps.
+- `rule` - Vertical or horizontal lines spanning the axis.
+- `square` - Scatter plot points as filled squares.
+- `text` - Scatter plot points represented by text.
+- `tick` - Vertical or horizontal tick marks.
 
 For a complete list, see the [Vega-Lite mark documentation](https://vega.github.io/vega-lite/docs/mark.html). Next, we will step through a number of the most commonly used mark types for statistical graphics.
 
@@ -541,14 +531,14 @@ render({
   mark: { type: 'point' },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' },
-    shape: { field: 'cluster', type: 'nominal' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'cluster', type: 'N' },
+    shape: { field: 'cluster', type: 'N' }
   }
 })
 ```
 
-In addition to encoding channels, marks can be stylized by providing values to the `mark*()` methods.
+In addition to encoding channels, marks can be stylized by providing values to the `mark` type specification.
 
 For example: point marks are drawn with stroked outlines by default, but can be specified to use `filled` shapes instead. Similarly, you can set a default `size` to set the total pixel area of the point mark.
 
@@ -557,9 +547,9 @@ render({
   mark: { type: 'point', filled: true, size: 100 },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' },
-    shape: { field: 'cluster', type: 'nominal' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'cluster', type: 'N' },
+    shape: { field: 'cluster', type: 'N' }
   }
 })
 ```
@@ -573,8 +563,8 @@ render({
   mark: { type: 'circle', size: 100 },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'cluster', type: 'N' }
   }
 })
 ```
@@ -588,8 +578,8 @@ render({
   mark: { type: 'square', size: 100 },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'cluster', type: 'N' }
   }
 })
 ```
@@ -603,8 +593,8 @@ render({
   mark: { type: 'tick' },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'fertility', type: 'quantitative' },
-    y: { field: 'cluster', type: 'nominal' }
+    x: { field: 'fertility', type: 'Q' },
+    y: { field: 'cluster', type: 'N' }
   }
 })
 ```
@@ -620,20 +610,15 @@ render({
   mark: { type: 'bar' },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'country', type: 'nominal' },
-    y: { field: 'pop', type: 'quantitative' }
+    x: { field: 'country', type: 'N' },
+    y: { field: 'pop', type: 'Q' }
   }
 })
 ```
 
-The bar width is set to a default size. _To change the width, try setting the `step` property of the `markBar` object's `width` attribute, like so:_
+The bar width is set to a default size. _To change the width, try setting the `step` property of chart `width` attribute, like so:_
 
-```js run=false
-{
-  mark: { type: 'bar' }
-  width: { step: 12 }
-}
-```
+`width: { step: 14 }`.
 
 Bars can also be stacked. Let's change the `x` encoding to use the `cluster` field, and encode `country` using the `color` channel. We'll also disable the legend (which would be very long with colors for all countries!) and use tooltips for the country name.
 
@@ -642,17 +627,17 @@ render({
   mark: { type: 'bar' },
   data: { values: data2000 },
   encoding: {
-    x: { field: 'country', type: 'nominal' },
-    y: { field: 'pop', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal', legend: null },
-    tooltip: { field: 'country', type: 'nominal' }
+    x: { field: 'cluster', type: 'N' },
+    y: { field: 'pop', type: 'Q' },
+    color: { field: 'country', type: 'N', legend: null },
+    tooltip: { field: 'country', type: 'N' }
   }
 })
 ```
 
 The examples above create bar charts from a zero baseline, and the `y` channel only encodes the non-zero value (or height) of the bar. However, the bar mark also allows you to specify starting and ending points to convey ranges.
 
-The chart below uses the `x` (starting point) and `x2` (ending point) channels to show the range of life expectancies within each regional cluster. Below we use the `min` and `max` aggregation functions to determine the end points of the range. We will discuss aggregation in greater detail in a later lesson!
+The chart below uses the `x` (starting point) and `x2` (ending point) channels to show the range of life expectancies within each regional cluster. Below we use the `min` and `max` aggregation functions to determine the end points of the range. We will discuss aggregation in greater detail in the next notebook!
 
 Alternatively, you can use `x` and `width` to provide a starting point plus offset, such that `x2 = x + width`.
 
@@ -663,7 +648,7 @@ render({
   encoding: {
     x: { aggregate: 'min', field: 'life_expect' },
     x2: { aggregate: 'max', field: 'life_expect' },
-    y: { field: 'cluster', type: 'nominal' }
+    y: { field: 'cluster', type: 'N' }
   }
 })
 ```
@@ -679,10 +664,10 @@ render({
   mark: { type: 'line' },
   data: { values: data },
   encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'fertility', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal', legend: null },
-    tooltip: { field: 'country', type: 'nominal' }
+    x: { field: 'year', type: 'O' },
+    y: { field: 'fertility', type: 'Q' },
+    color: { field: 'country', type: 'N', legend: null },
+    tooltip: { field: 'country', type: 'N' }
   },
   width: 400
 })
@@ -694,16 +679,13 @@ Let's change some of the default mark parameters to customize the plot. We can s
 
 ```js echo
 render({
-  mark: {
-    type: 'line',
-    strokeWidth: 3, opacity: 0.5, interpolate: 'monotone'
-  },
+  mark: { type: 'line', strokeWidth: 3, opacity: 0.5, interpolate: 'monotone' },
   data: { values: data },
   encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'fertility', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal', legend: null },
-    tooltip: { field: 'country', type: 'nominal' }
+    x: { field: 'year', type: 'O' },
+    y: { field: 'fertility', type: 'Q' },
+    color: { field: 'country', type: 'N', legend: null },
+    tooltip: { field: 'country', type: 'N' }
   },
   width: 400
 })
@@ -722,13 +704,10 @@ render({
   mark: { type: 'line', opacity: 0.5 },
   data: { values: data.filter(d => d.year === 1955 || d.year === 2005) },
   encoding: {
-    x: {
-      field: 'year', type: 'ordinal',
-      scale: { padding: 0.1 }
-    },
-    y: { field: 'pop', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal', legend: null },
-    tooltip: { field: 'country', type: 'nominal' }
+    x: { field: 'year', type: 'O', scale: { padding: 0.1 } },
+    y: { field: 'pop', type: 'Q' },
+    color: { field: 'country', type: 'N', legend: null },
+    tooltip: { field: 'country', type: 'N' }
   },
   width: { step: 100 }
 })
@@ -749,12 +728,11 @@ render({
   mark: { type: 'area' },
   data: { values: dataUS },
   encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'fertility', type: 'quantitative' }
+    x: { field: 'year', type: 'O' },
+    y: { field: 'fertility', type: 'Q' }
   }
 })
 ```
-
 Similar to `line` marks, `area` marks support an `interpolate` parameter.
 
 ```js echo
@@ -762,8 +740,8 @@ render({
   mark: { type: 'area', interpolate: 'monotone' },
   data: { values: dataUS },
   encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'fertility', type: 'quantitative' }
+    x: { field: 'year', type: 'O' },
+    y: { field: 'fertility', type: 'Q' }
   }
 })
 ```
@@ -783,9 +761,9 @@ render({
   mark: { type: 'area' },
   data: { values: dataNA },
   encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'pop', type: 'quantitative' },
-    color: { field: 'country', type: 'nominal' }
+    x: { field: 'year', type: 'O' },
+    y: { field: 'pop', type: 'Q' },
+    color: { field: 'country', type: 'N' }
   }
 })
 ```
@@ -802,9 +780,9 @@ render({
   mark: { type: 'area' },
   data: { values: dataNA },
   encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'pop', type: 'quantitative', stack: 'center' },
-    color: { field: 'country', type: 'nominal' }
+    x: { field: 'year', type: 'O' },
+    y: { field: 'pop', type: 'Q', stack: 'center' },
+    color: { field: 'country', type: 'N' }
   }
 })
 ```
@@ -816,9 +794,9 @@ render({
   mark: { type: 'area', opacity: 0.5 },
   data: { values: dataNA },
   encoding: {
-    x: { field: 'year', type: 'ordinal' },
-    y: { field: 'pop', type: 'quantitative', stack: null },
-    color: { field: 'country', type: 'nominal' }
+    x: { field: 'year', type: 'O' },
+    y: { field: 'pop', type: 'Q', stack: null },
+    color: { field: 'country', type: 'N' }
   }
 })
 ```
@@ -832,7 +810,7 @@ render({
   mark: { type: 'area' },
   data: { values: dataNA },
   encoding: {
-    x: { field: 'year', type: 'ordinal' },
+    x: { field: 'year', type: 'O' },
     y: { aggregate: 'min', field: 'fertility' },
     y2: { aggregate: 'max', field: 'fertility' }
   },
@@ -840,7 +818,7 @@ render({
 })
 ```
 
-We can see a larger range of values in 1995, from just under 4 to just under 7. By 2005, both the overall fertility values and the variability have declined, centered around 2 children per familty.
+We can see a larger range of values in 1995, from just under 4 to just under 7. By 2005, both the overall fertility values and the variability have declined, centered around 2 children per family.
 
 All the `area` mark examples above use a vertically oriented area. However, Vega-Lite supports horizontal areas as well. Let's transpose the chart above, simply by swapping the `x` and `y` channels.
 
@@ -849,13 +827,15 @@ render({
   mark: { type: 'area' },
   data: { values: dataNA },
   encoding: {
-    y: { field: 'year', type: 'ordinal' },
+    y: { field: 'year', type: 'O' },
     x: { aggregate: 'min', field: 'fertility' },
     x2: { aggregate: 'max', field: 'fertility' }
   },
   height: { step: 40 }
 })
 ```
+
+<hr/>
 
 ## Summary
 
@@ -865,12 +845,10 @@ In the next module, we will look at the use of data transformations to create ch
 
 Interested in learning more about visual encoding?
 
-<img
-  style="max-width: 650px;"
-  title="Bertin's Taxonomy of Visual Encoding Channels"
-  src="https://cdn-images-1.medium.com/max/2000/1*jsb78Rr2cDy6zrE7j2IKig.png"
-/><br/>
-<small>Bertin's taxonomy of visual encodings from _[Sémiologie Graphique](https://books.google.com/books/about/Semiology_of_Graphics.html?id=X5caQwAACAAJ)_, as adapted by [Mike Bostock](https://bost.ocks.org/mike/).</small>
+
+<img title="Bertin's Taxonomy of Visual Encoding Channels" src="https://cdn-images-1.medium.com/max/2000/1*jsb78Rr2cDy6zrE7j2IKig.png" style="max-width: 650px;"><br/>
+<small>Bertin's taxonomy of visual encodings from <a href="https://books.google.com/books/about/Semiology_of_Graphics.html?id=X5caQwAACAAJ"><em>Sémiologie Graphique</em></a>, as adapted by <a href="https://bost.ocks.org/mike/">Mike Bostock</a>.</small>
+
 
 - The systematic study of marks, visual encodings, and backing data types was initiated by [Jacques Bertin](https://en.wikipedia.org/wiki/Jacques_Bertin) in his pioneering 1967 work [_Sémiologie Graphique (The Semiology of Graphics)_](https://books.google.com/books/about/Semiology_of_Graphics.html?id=X5caQwAACAAJ). The image above illustrates position, size, value (brightness), texture, color (hue), orientation, and shape channels, alongside Bertin's recommendations for the data type comparisons they support.
 - The framework of data types, marks, and channels also guides _automated_ visualization design tools, starting with [Mackinlay's APT (A Presentation Tool)](https://scholar.google.com/scholar?cluster=10191273548472217907) in 1986 and continuing in more recent systems such as [Voyager](http://idl.cs.washington.edu/papers/voyager/) and [Draco](http://idl.cs.washington.edu/papers/draco/).

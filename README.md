@@ -2,17 +2,19 @@
 
 Data visualization course curriculum.
 
-This is an [Observable Framework](https://observablehq.com/framework) project. To start the local preview server, run:
+## Viewing instructions
 
-```
-npm run dev
-```
+0. Make sure you have Node.js (v20 or higher) and npm installed
+1. Clone https://github.com/uwdata/visualization-course, for example via `git clone https://github.com/uwdata/visualization-course.git`
+2. Run `npm i` to install dependencies
+3. Run `npm run dev` to start a local preview server
+4. Visit <http://localhost:3000> to preview the site
 
-Then visit <http://localhost:3000> to preview your project.
-
-For more, see <https://observablehq.com/framework/getting-started>.
+While running the dev server, edits to files in the `src` folder will trigger live updates in the browser.
 
 ## Project structure
+
+This is an [Observable Framework](https://observablehq.com/framework) project. For more, see <https://observablehq.com/framework/getting-started>.
 
 A typical Framework project looks like this:
 
@@ -45,9 +47,9 @@ A typical Framework project looks like this:
 
 ## Command reference
 
-| Command           | Description                                              |
-| ----------------- | -------------------------------------------------------- |
-| `npm install`            | Install or reinstall dependencies                        |
+| Command              | Description                                              |
+| -------------------- | -------------------------------------------------------- |
+| `npm install`        | Install or reinstall dependencies                        |
 | `npm run dev`        | Start local preview server                               |
 | `npm run build`      | Build your static site, generating `./dist`              |
 | `npm run deploy`     | Deploy your project to Observable                        |
