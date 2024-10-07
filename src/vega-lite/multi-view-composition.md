@@ -27,9 +27,7 @@ const weather = vega_datasets['weather.csv']()
 ```
 
 ```js
-// hack to sidestep framework/vega interaction bug
 const weather = await vega_datasets['weather.csv']();
-weather.forEach(d => { d.date = +d.date; });
 ```
 
 ```js echo
@@ -929,9 +927,13 @@ render({
 })
 ```
 
-Vertical concatenation works similarly to horizontal concatenation. _Using the `vl.vconcat` method, modify the code to use a vertical ordering instead of a horizontal ordering._
+Vertical concatenation works similarly to horizontal concatenation. _Using the `vconcat` operator, modify the code to use a vertical ordering instead of a horizontal ordering._
 
-Finally, note that horizontal and vertical concatenation can be combined. _What happens if you write something like `vl.vconcat(vl.hconcat(temp, precip), wind)`?_
+Finally, note that horizontal and vertical concatenation can be combined. _What happens if you write something like this?_
+
+```js
+{ vconcat: [ { hconcat: [temp, precip] }, wind ] }
+```
 
 As we will revisit later, concatenation operators let you combine any and all charts into a multi-view dashboard!
 

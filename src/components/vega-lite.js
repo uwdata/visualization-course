@@ -3,7 +3,7 @@ import * as vegalite from 'npm:vega-lite';
 import * as api from 'npm:vega-lite-api';
 import * as tooltip from 'npm:vega-tooltip';
 
-export const vl = api.register(vega, vegalite, {
+const opt = {
   config: {
     // vega-lite default configuration
     config: {
@@ -18,14 +18,17 @@ export const vl = api.register(vega, vegalite, {
     if (view.container()) view.container().style['overflow-x'] = 'auto';
   },
   view: {
-    renderer: 'svg'
+    renderer: 'svg',
+    logLevel: vega.Warn
   }
-});
+};
+
+export const vl = api.register(vega, vegalite, opt);
 
 /**
  * Render a Vega-Lite JSON specification.
  * @returns The rendered HTML element.
  */
-export function render(spec) {
-  return vl.spec(spec).render();
+export async function render(spec) {
+  return vl.render({ ...opt, spec });
 }
