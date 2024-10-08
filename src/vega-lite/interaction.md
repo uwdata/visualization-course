@@ -592,7 +592,7 @@ Earlier in this notebook we saw an example of _brushing &amp; linking_: using a 
 
 Returning to the `cars` dataset, we can use the `repeat` operator to build a [scatter plot matrix (SPLOM)](https://en.wikipedia.org/wiki/Scatter_plot#Scatterplot_matrices) that shows associations between mileage, acceleration, and horsepower. We can define an `interval` selection and include it _within_ our repeated scatter plot specification to enable linked selections among all the plots.
 
-Moreover, we can combine our brushing selection with a `point` selection that is bound to our legend, allowing us to select or de-select points corresponding to specific legend entries. We can combine these two selections into a single selection predicate using the code `vl.and(brush, legend)`.
+Moreover, we can combine our brushing selection with a `point` selection that is bound to our legend, allowing us to select or de-select points corresponding to specific legend entries. We can combine these two selections into a single selection predicate using the code `{ and: [{param: 'brush'}, {param: 'legend'}] }`.
 
 _Click and drag in any of the plots below to perform brushing &amp; linking. Shift-click legend entries to isolate specific cylinder groups._
 

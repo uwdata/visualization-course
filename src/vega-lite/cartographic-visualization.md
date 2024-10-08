@@ -91,7 +91,7 @@ render({
 })
 ```
 
-In the example above, Vega-Lite applies a default blue color and uses a default map projection. We can customize the colors and boundary stroke widths using standard mark properties. Using the `project` method we can also add our own map projection, specified using `vl.projection()`:
+In the example above, Vega-Lite applies a default blue color and uses a default map projection. We can customize the colors and boundary stroke widths using standard mark properties. Using the `projection` property we can also add our own map projection:
 
 ```js echo
 render({
