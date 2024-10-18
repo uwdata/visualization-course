@@ -26,6 +26,13 @@ export default {
         {name: 'Annotated Time Series', path: 'vega-lite/examples/annotated-time-series'},
         {name: 'Airport Connections', path: 'vega-lite/examples/airport-connections'}
       ]
+    },
+    {
+      name: 'D3',
+      pages: [
+        {name: 'Introduction, Part 1', path: 'd3/introduction-part-1'},
+        {name: 'Introduction, Part 2', path: 'd3/introduction-part-2'}
+      ]
     }
   ],
 
